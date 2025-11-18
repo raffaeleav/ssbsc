@@ -1,6 +1,6 @@
 **/.DS_Store
-**/__pycache__/*
+**/__pycache__/
 
-data/datasets/*
-data/results/*
-data/temp/*
+data/datasets/
+data/results/
+data/temp/
