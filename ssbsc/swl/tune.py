@@ -90,7 +90,7 @@ def tune_model():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-    alpha = 0.5
+    alpha = 0.6
     delta = 0.1
 
     trainer = SecTrainer(

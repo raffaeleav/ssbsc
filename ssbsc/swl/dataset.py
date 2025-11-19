@@ -3,6 +3,7 @@ import json
 import torch
 import galois
 import numpy as np
+import tensorflow as tf
 
 from tqdm import tqdm
 from datasets import load_dataset
@@ -33,16 +34,6 @@ class SecDataset(torch.utils.data.Dataset):
         }
 
 
-def sentence_to_bytes(s, length):
-    # substitute characters that are not ascii with ?
-    b = s.encode("ascii", errors="replace")[:length]
-
-    if len(b) < length:
-        b = b + b'\x00' * (length - len(b))
-
-    return np.frombuffer(b, dtype=np.uint8)
-
-
 def awgn(bits, snr_db):
     # snr is converted from db in linear scale
     snr_linear = 10.0 ** (snr_db/10.0)
@@ -54,7 +45,7 @@ def awgn(bits, snr_db):
     bits = np.array(bits, dtype=np.float32)
 
     # bspk modulation
-    tx = 1.0 - 2.0 * bits
+    tx = 2.0 * bits - 1.0
 
     # noise is added to the modulation
     rx = tx + noise_std * np.random.randn(*tx.shape)
@@ -103,31 +94,50 @@ def encode(encoder, bits):
 def decode(decoder, llr):
     # decoder needs float32
     llr = np.array(llr, dtype=np.float32)
-    db = decoder(llr)
+
+    with tf.device("/CPU:0"):
+        db = decoder(llr)
 
     return db
 
 
-def process_sentence(G, s):
+def process_sentence(G, s, n, k):
     pairs = []
 
     # encoders and decoders are not thread-safe, so only the gen. matrix is shared
     encoder = init_lbc_encoder(G)
     decoder = init_lbc_decoder(G)
 
-    bytes_ = sentence_to_bytes(s, MAX_BYTES)
-    bits = np.unpackbits(bytes_)
-    seg_bits = np.array_split(bits, SEGMENTS)
+    s = s.ljust(MAX_BYTES, "\x00")
+
+    bytes = s.encode("ascii", errors="replace")[:MAX_BYTES]
+    bytes = np.frombuffer(bytes, dtype=np.uint8)
+
+    bits = np.unpackbits(bytes)
+
+    total_len = SEGMENTS * k
+
+    if len(bits) < total_len:
+        bits = np.concatenate([bits, np.zeros(total_len - len(bits), dtype=np.uint8)])
+
+    seg_bits = np.split(bits, SEGMENTS)
 
     for snr in SNR_DB_LIST:
         rec_bits = []
 
         # encode, add noise through awgn channel, decode
         for seg in seg_bits:
-            cw  = encode(encoder, seg)
+            cw = encode(encoder, seg)
+            cw = tf.cast(cw, tf.float32)
+
             llr = awgn(cw, snr)
-            db  = decode(decoder, llr)
-            rec_bits.append(db)
+            llr = tf.reshape(llr, (1, -1))
+
+            db = decode(decoder, llr)
+            db = db.numpy()
+            db = db.reshape(-1)
+            
+            rec_bits.append(db[:k].astype(np.uint8))
 
         rec_bits = np.concatenate(rec_bits)
         rec_bytes = np.packbits(np.array(rec_bits, dtype=np.uint8))[:MAX_BYTES]
@@ -135,9 +145,6 @@ def process_sentence(G, s):
         try:
             # decoded sentece
             s1 = rec_bytes.tobytes().decode("ascii", errors="replace")
-
-            # checks if each character is s1 is ascii printable
-            s1 = "".join(ch if 32 <= ord(ch) <= 126 else " " for ch in s1)
         except Exception:
             s1 = ""
 
@@ -158,7 +165,7 @@ def enc_dec(sentences):
 
     # parallel senteces processing
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(process_sentence, G, s) for s in sentences]
+        futures = [executor.submit(process_sentence, G, s, n, k) for s in sentences]
 
         for f in tqdm(as_completed(futures), total=len(futures), desc="encoding / decoding"):
             pairs.extend(f.result())
