@@ -133,7 +133,7 @@ def process_sentence(G, s):
         rec_bytes = np.packbits(np.array(rec_bits, dtype=np.uint8))[:MAX_BYTES]
 
         try:
-            # estimated sentece
+            # decoded sentece
             s1 = rec_bytes.tobytes().decode("ascii", errors="replace")
 
             # checks if each character is s1 is ascii printable
@@ -182,6 +182,9 @@ def get_pairs():
 
         num_train_sentences = NUM_TRAIN_SENTENCES / 2
         num_test_sentences = NUM_TEST_SENTENCES / 2
+
+        num_train_sentences = int(num_train_sentences)
+        num_test_sentences = int(num_test_sentences)
 
         train_sentences = snli_corpus["train"]["premise"][:num_train_sentences] + snli_corpus["train"]["hypothesis"][:num_train_sentences]
         test_sentences = snli_corpus["validation"]["premise"][:num_test_sentences] + snli_corpus["validation"]["hypothesis"][:num_test_sentences]

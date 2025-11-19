@@ -20,12 +20,11 @@ class SecTrainer(Trainer):
         outputs = model(**inputs)
         logits = outputs.get("logits")
         
-        # self.tokenizer is deprecated
         loss = custom_loss(logits, labels, self.tokenizer, alpha=self.alpha, delta=self.delta)
         
         return (loss, outputs) if return_outputs else loss
 
-
+# [to-do] check 
 def custom_loss(logits, labels, tokenizer, alpha, delta):
     loss_fct = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
     ce_loss = loss_fct(logits.view(-1, logits.size(-1)), labels.view(-1))
@@ -92,7 +91,7 @@ def tune_model():
         torch.cuda.empty_cache()
 
     alpha = 0.5
-    delta = 1.0
+    delta = 0.1
 
     trainer = SecTrainer(
         model=model,
