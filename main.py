@@ -10,5 +10,5 @@ if __name__ == "__main__":
 
     fld.setup()
 
-    tn.tune_model()
+    # tn.tune_model()
     ts.test_model()

@@ -1,5 +1,6 @@
 import json
 import torch
+import numpy as np
 
 from tqdm import tqdm
 from datetime import datetime
@@ -7,8 +8,8 @@ from ssbsc.swl import dataset as ds
 from rouge_score import rouge_scorer
 from torch.utils.data import DataLoader
 from ssbsc.helpers import folders as fld
-from ssbsc.swl import MAX_SEQ_LEN, BATCH_SIZE
 from nltk.translate.bleu_score import corpus_bleu
+from ssbsc.swl import MAX_SEQ_LEN, BATCH_SIZE, SEGMENTS
 from transformers import BartTokenizer, BartForConditionalGeneration
 
 
@@ -69,12 +70,24 @@ def decode(model, tokenizer, test_dataset, batch_size=32):
     return sentences, pred_sentences
 
 
-def bler(sentences, pred_sentences):
-    errors = sum(1 for s, s2 in zip(sentences, pred_sentences) if s != s2)
+def bler(sentences, pred_sentences, segments):
+    blocks = 0
+    errors = 0
 
-    score = errors / len(sentences)
+    for s, s2 in zip(sentences, pred_sentences):
+        s_list = np.array(list(s))
+        s2_list = np.array(list(s2))
 
-    return score
+        s_blocks = np.array_split(s_list, segments)
+        s2_blocks = np.array_split(s2_list, segments)
+
+        blocks += segments
+
+        for s_block, s2_block in zip(s_blocks, s2_blocks):
+            if not np.array_equal(s_block, s2_block):
+                errors+= 1
+
+    return errors / blocks
 
 
 def bleu(sentences, pred_sentences):
@@ -112,7 +125,7 @@ def test_model():
     for s, s2 in zip(sentences, pred_sentences):
         print(f"[Log] s: {s}, s2: {s2}")
 
-    b = bler(sentences, pred_sentences)
+    b = bler(sentences, pred_sentences, SEGMENTS)
     l = bleu(sentences, pred_sentences)
     r = rouge_l(sentences, pred_sentences)
 
