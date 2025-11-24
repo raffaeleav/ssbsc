@@ -175,8 +175,8 @@ def enc_dec(sentences):
 
 def get_pairs():
     datasets_dir = fld.get_datasets_dir()
-    train_pairs_file = fld.get_file_path(datasets_dir, "train_pairs.json")
-    test_pairs_file = fld.get_file_path(datasets_dir, "test_pairs.json")
+    train_pairs_file = fld.get_file_path(datasets_dir, "swl_train_pairs.json")
+    test_pairs_file = fld.get_file_path(datasets_dir, "swl_test_pairs.json")
 
     if os.path.isfile(train_pairs_file) and os.path.isfile(test_pairs_file):
         with open(train_pairs_file, "r") as f:
