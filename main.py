@@ -1,8 +1,9 @@
 import os
 
+from glob import glob
 from ssbsc.swl import tune as tn
 from ssbsc.swl import test as ts
-from ssbsc.core import test as sts
+from ssbsc.core import dataset as sts
 from ssbsc.helpers import folders as fld
 
 
@@ -16,11 +17,11 @@ if __name__ == "__main__":
     swl_results = fld.get_file_path(results_dir, "swl_*.json")
     ssbsc_results = fld.get_file_path(results_dir, "ssbsc_*.json")
 
-    if os.path.isfile(model): 
+    if not os.path.isfile(model): 
         tn.tune_model()
     
-    if os.path.isfile(swl_results): 
+    if not glob(swl_results): 
         ts.test_model()
 
-    if os.path.isfile(ssbsc_results): 
-        sts.test_model()
+    if not glob(ssbsc_results):
+        sts.get_pairs()

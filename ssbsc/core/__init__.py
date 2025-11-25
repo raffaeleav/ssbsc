@@ -1,6 +1,6 @@
 # dataset parameters
 MAX_BYTES = 64
-SEGMENTS = 8
+SEGMENTS = 32
 
 # awgn channel parameters
 SNR_DB_LIST = [-2.0, -1.2, -0.6, -0.2, 0.0, 0.2, 0.4, 0.8, 1.5, 2.0]
