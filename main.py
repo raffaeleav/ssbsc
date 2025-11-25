@@ -3,7 +3,7 @@ import os
 from glob import glob
 from ssbsc.swl import tune as tn
 from ssbsc.swl import test as ts
-from ssbsc.core import dataset as sts
+from ssbsc.core import test as sts
 from ssbsc.helpers import folders as fld
 
 
@@ -24,4 +24,5 @@ if __name__ == "__main__":
         ts.test_model()
 
     if not glob(ssbsc_results):
-        sts.get_pairs()
+        sbpe = False
+        sts.test_model(sbpe)

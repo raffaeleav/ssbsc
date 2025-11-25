@@ -24,7 +24,7 @@ def init_model():
 
 def init_test_dataset(tokenizer):
     _, test_pairs = ds.get_pairs()
-    test_dataset  = ds.SecDataset(test_pairs,  tokenizer, MAX_SEQ_LEN)
+    test_dataset  = ds.SecDataset(test_pairs, tokenizer, MAX_SEQ_LEN)
 
     return test_dataset
 
@@ -121,10 +121,7 @@ def test_model():
     test_dataset = init_test_dataset(tokenizer)
     
     sentences, pred_sentences = decode(model, tokenizer, test_dataset, BATCH_SIZE)
-
-    for s, s2 in zip(sentences, pred_sentences):
-        print(f"[Log] s: {s}, s2: {s2}")
-
+    
     b = bler(sentences, pred_sentences, SEGMENTS)
     l = bleu(sentences, pred_sentences)
     r = rouge_l(sentences, pred_sentences)
