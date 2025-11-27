@@ -130,7 +130,7 @@ def test_model(sbpe):
         tokenizer, model = init_model()
     else: 
         results_file = fld.get_file_path(results_dir, f"ssbsc_results_{timestamp}.json")
-        tokenizer, model = init_model()
+        tokenizer, model = init_sbpe_model()
 
     test_dataset = init_test_dataset(tokenizer)
     

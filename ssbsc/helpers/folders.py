@@ -9,11 +9,13 @@ def setup():
     results_dir = os.path.abspath(os.path.join(data_dir, "results"))
     temp_dir = os.path.abspath(os.path.join(data_dir, "temp"))
     datasets_dir = os.path.abspath(os.path.join(data_dir, "datasets"))
+    tokenizer_dir = os.path.abspath(os.path.join(temp_dir, "tokenizer"))
 
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(results_dir, exist_ok=True)
     os.makedirs(temp_dir, exist_ok=True)
     os.makedirs(datasets_dir, exist_ok=True)
+    os.makedirs(tokenizer_dir, exist_ok=True)
 
 
 def get_data_dir():
@@ -25,30 +27,31 @@ def get_data_dir():
 
 
 def get_results_dir():
-    file_path = os.path.dirname(os.path.abspath(__file__))
-    project_path = os.path.abspath(os.path.join(file_path, "..", ".."))
-    data_dir = os.path.abspath(os.path.join(project_path, "data"))
+    data_dir = get_data_dir()
     results_dir = os.path.abspath(os.path.join(data_dir, "results"))
 
     return results_dir
 
 
 def get_temp_dir():
-    file_path = os.path.dirname(os.path.abspath(__file__))
-    project_path = os.path.abspath(os.path.join(file_path, "..", ".."))
-    data_dir = os.path.abspath(os.path.join(project_path, "data"))
+    data_dir = get_data_dir()
     temp_dir = os.path.abspath(os.path.join(data_dir, "temp"))
 
     return temp_dir
 
 
 def get_datasets_dir():
-    file_path = os.path.dirname(os.path.abspath(__file__))
-    project_path = os.path.abspath(os.path.join(file_path, "..", ".."))
-    data_dir = os.path.abspath(os.path.join(project_path, "data"))
+    data_dir = get_data_dir()
     datasets_dir = os.path.abspath(os.path.join(data_dir, "datasets"))
 
     return datasets_dir
+
+
+def get_tokenizer_dir():
+    temp_dir = get_temp_dir()
+    tokenizer_dir = os.path.abspath(os.path.join(temp_dir, "tokenizer"))
+
+    return tokenizer_dir
 
 
 def get_dir(dir_path, dir_name):
