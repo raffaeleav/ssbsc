@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from ssbsc.helpers import folders as fld
 from nltk.translate.bleu_score import corpus_bleu
 from ssbsc.swl import MAX_SEQ_LEN, BATCH_SIZE, SEGMENTS
-from transformers import BartTokenizer, BartForConditionalGeneration
+from transformers import BartTokenizer, BartForConditionalGeneration, PreTrainedTokenizerFast
 
 
 def init_model():
@@ -24,9 +24,21 @@ def init_model():
 
 def init_sbpe_model():
     temp_dir = fld.get_temp_dir()
+    tokenizer_dir = fld.get_dir(temp_dir, "tokenizer")
 
-    tokenizer = BartTokenizer.from_pretrained(temp_dir)
+    tokenizer = PreTrainedTokenizerFast.from_pretrained(tokenizer_dir)
+
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': '<pad>'})
+
+    tokenizer.bos_token = tokenizer.bos_token or "<s>"
+    tokenizer.eos_token = tokenizer.eos_token or "</s>"
+    tokenizer.unk_token = tokenizer.unk_token or "<unk>"
+
     model = BartForConditionalGeneration.from_pretrained(temp_dir)
+    
+    model.config.pad_token_id = tokenizer.pad_token_id
+    model.resize_token_embeddings(len(tokenizer))
 
     return tokenizer, model
 

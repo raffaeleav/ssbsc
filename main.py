@@ -15,7 +15,6 @@ if __name__ == "__main__":
 
     model = fld.get_file_path(temp_dir, "model.safetensors")
     swl_results = fld.get_file_path(results_dir, "swl_*.json")
-    ssbsc_results = fld.get_file_path(results_dir, "ssbsc_*.json")
 
     if not os.path.isfile(model): 
         tn.tune_model()
@@ -23,6 +22,5 @@ if __name__ == "__main__":
     if not glob(swl_results): 
         ts.test_model()
 
-    if not glob(ssbsc_results):
-        sbpe = False
-        sts.test_model(sbpe)
+    sbpe = True
+    sts.test_model(sbpe)

@@ -14,10 +14,10 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 
 
 def init_model():
-    temp_dir = fld.get_temp_dir()
+    swl_temp_dir = fld.get_swl_temp_dir()
 
-    tokenizer = BartTokenizer.from_pretrained(temp_dir)
-    model = BartForConditionalGeneration.from_pretrained(temp_dir)
+    tokenizer = BartTokenizer.from_pretrained(swl_temp_dir)
+    model = BartForConditionalGeneration.from_pretrained(swl_temp_dir)
 
     return tokenizer, model
 

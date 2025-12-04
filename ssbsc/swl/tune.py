@@ -64,13 +64,13 @@ def init__train_dataset(tokenizer):
     return train_dataset
 
 def tune_model():
-    temp_dir = fld.get_temp_dir()
+    swl_temp_dir = fld.get_swl_temp_dir()
 
     tokenizer, model = init_model()
     train_dataset = init__train_dataset(tokenizer)
     
     training_args = TrainingArguments(
-        output_dir=temp_dir,
+        output_dir=swl_temp_dir,
 
         num_train_epochs=NUM_EPOCHS,
         per_device_train_batch_size=BATCH_SIZE,
@@ -105,7 +105,7 @@ def tune_model():
     )
 
     trainer.train()
-    model.save_pretrained(temp_dir)
-    tokenizer.save_pretrained(temp_dir)
+    model.save_pretrained(swl_temp_dir)
+    tokenizer.save_pretrained(swl_temp_dir)
 
     print("[Success] Fine-tuning completed")
