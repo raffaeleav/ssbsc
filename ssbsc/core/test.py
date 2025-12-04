@@ -22,27 +22,6 @@ def init_model():
     return tokenizer, model
 
 
-def init_sbpe_model():
-    temp_dir = fld.get_temp_dir()
-    tokenizer_dir = fld.get_dir(temp_dir, "tokenizer")
-
-    tokenizer = PreTrainedTokenizerFast.from_pretrained(tokenizer_dir)
-
-    if tokenizer.pad_token is None:
-        tokenizer.add_special_tokens({'pad_token': '<pad>'})
-
-    tokenizer.bos_token = tokenizer.bos_token or "<s>"
-    tokenizer.eos_token = tokenizer.eos_token or "</s>"
-    tokenizer.unk_token = tokenizer.unk_token or "<unk>"
-
-    model = BartForConditionalGeneration.from_pretrained(temp_dir)
-    
-    model.config.pad_token_id = tokenizer.pad_token_id
-    model.resize_token_embeddings(len(tokenizer))
-
-    return tokenizer, model
-
-
 def init_test_dataset(tokenizer):
     test_pairs = ds.get_pairs()
     test_dataset  = ds.SecDataset(test_pairs, tokenizer, MAX_SEQ_LEN)
@@ -133,16 +112,12 @@ def rouge_l(sentences, pred_sentences):
     return score
 
 
-def test_model(sbpe):
+def test_model():
     results_dir = fld.get_results_dir()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-    if not sbpe:
-        results_file = fld.get_file_path(results_dir, f"ssbsc_no_sbpe_results_{timestamp}.json")
-        tokenizer, model = init_model()
-    else: 
-        results_file = fld.get_file_path(results_dir, f"ssbsc_results_{timestamp}.json")
-        tokenizer, model = init_sbpe_model()
+    results_file = fld.get_file_path(results_dir, f"ssbsc_results_{timestamp}.json")
+    tokenizer, model = init_model()
 
     test_dataset = init_test_dataset(tokenizer)
     
