@@ -174,8 +174,12 @@ def get_sentences(test_pairs):
 
 def get_pairs():
     datasets_dir = fld.get_datasets_dir()
+    train_pairs_file = fld.get_file_path(datasets_dir, "swl_train_pairs.json")
     test_pairs_file = fld.get_file_path(datasets_dir, "ssbsc_test_pairs.json")
     swl_test_pairs_file = fld.get_file_path(datasets_dir, "swl_test_pairs.json")
+
+    with open(train_pairs_file, "r") as f:
+        train_pairs = json.load(f)
 
     if os.path.isfile(test_pairs_file):
         with open(test_pairs_file, "r") as f:
@@ -190,4 +194,4 @@ def get_pairs():
         with open(test_pairs_file, "w") as f:
             json.dump(test_pairs, f)
 
-    return test_pairs
+    return train_pairs, test_pairs

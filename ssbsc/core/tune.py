@@ -1,11 +1,11 @@
 import torch
-import torch.nn as nn
 import Levenshtein
+import torch.nn as nn
 
-from ssbsc.swl import dataset as ds
+from ssbsc.core import dataset as ds
 from ssbsc.helpers import folders as fld
-from ssbsc.swl import NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE, LOG_STEPS, WARMUP_STEPS, MAX_SEQ_LEN
-from transformers import BartTokenizer, PreTrainedTokenizerFast, Trainer, TrainingArguments
+from transformers import BartForConditionalGeneration, PreTrainedTokenizerFast, Trainer, TrainingArguments
+from ssbsc.core import NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE, LOG_STEPS, WARMUP_STEPS, MAX_SEQ_LEN
 
 
 class SecTrainer(Trainer):
@@ -51,8 +51,16 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
 
 
 def init_model():
-    tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
-    model = PreTrainedTokenizerFast.from_pretrained("facebook/bart-base")
+    tokenizer = PreTrainedTokenizerFast.from_pretrained("alisawuffles/superbpe-tokenizer-128k")
+    model = BartForConditionalGeneration.from_pretrained("facebook/bart-base")
+
+    model.resize_token_embeddings(len(tokenizer))
+
+    tokenizer.pad_token = tokenizer.eos_token
+    model.config.pad_token_id = tokenizer.eos_token_id
+
+    model.gradient_checkpointing_enable()
+    model.config.use_cache = False
 
     return tokenizer, model
 
@@ -65,27 +73,29 @@ def init__train_dataset(tokenizer):
 
 
 def tune_model():
-    swl_temp_dir = fld.get_swl_temp_dir()
+    ssbsc_temp_dir = fld.get_ssbsc_temp_dir()
 
     tokenizer, model = init_model()
     train_dataset = init__train_dataset(tokenizer)
     
+    # due to my 8GB VRAM i have to use 1 element x training batch, so gradient_accumulation_steps=8 is leveraged
     training_args = TrainingArguments(
-        output_dir=swl_temp_dir,
+        output_dir=ssbsc_temp_dir,
 
         num_train_epochs=NUM_EPOCHS,
-        per_device_train_batch_size=BATCH_SIZE,
+        per_device_train_batch_size=1,
         learning_rate=LEARNING_RATE,
         logging_steps=LOG_STEPS,
         # to better leverage Adam
         warmup_steps=WARMUP_STEPS,  
 
-        gradient_accumulation_steps=4,
+        gradient_accumulation_steps=8,
         gradient_checkpointing=True,
 
         save_strategy="epoch",
 
-        fp16=torch.cuda.is_available()
+        fp16=torch.cuda.is_available(),
+        bf16=False,
     )
 
     if torch.cuda.is_available():
@@ -99,14 +109,14 @@ def tune_model():
         args=training_args,
 
         train_dataset=train_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
 
         alpha=alpha,
         delta=delta
     )
 
     trainer.train()
-    model.save_pretrained(swl_temp_dir)
-    tokenizer.save_pretrained(swl_temp_dir)
+    model.save_pretrained(ssbsc_temp_dir)
+    tokenizer.save_pretrained(ssbsc_temp_dir)
 
     print("[Success] Fine-tuning completed")

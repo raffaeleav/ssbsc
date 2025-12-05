@@ -10,7 +10,7 @@ if __name__ == "__main__":
     fld.setup()
 
     swl_temp_dir = fld.get_swl_temp_dir()
-    ssbsc_temp_dir = fld.get_ssbsc_temp_dir
+    ssbsc_temp_dir = fld.get_ssbsc_temp_dir()
     results_dir = fld.get_results_dir()
 
     swl_model = fld.get_file_path(swl_temp_dir, "model.safetensors")
@@ -25,8 +25,8 @@ if __name__ == "__main__":
     if not glob(swl_results): 
         ts.test_model()
 
-    if not os.path.isfile(swl_model): 
+    if not os.path.isfile(ssbsc_model): 
         sts.tune_model()
     
-    if not glob(swl_results): 
-        sts.test_model()
+    # if not glob(swl_results): 
+        # sts.test_model()

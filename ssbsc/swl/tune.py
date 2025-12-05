@@ -98,7 +98,7 @@ def tune_model():
         args=training_args,
 
         train_dataset=train_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
 
         alpha=alpha,
         delta=delta
