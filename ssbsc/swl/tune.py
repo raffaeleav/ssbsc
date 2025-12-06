@@ -20,7 +20,7 @@ class SecTrainer(Trainer):
         outputs = model(**inputs)
         logits = outputs.get("logits")
         
-        loss = custom_loss(logits, labels, self.tokenizer, alpha=self.alpha, delta=self.delta)
+        loss = custom_loss(logits, labels, self.processing_class, alpha=self.alpha, delta=self.delta)
         
         return (loss, outputs) if return_outputs else loss
 
@@ -37,11 +37,10 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
         pred_seq  = pred_seq[:len(label_seq)]
 
         pred_str  = tokenizer.decode(pred_seq, skip_special_tokens=True)
-        label_str = tokenizer.decode(label_seq, skip_special_tokens=True)
 
-        edit_dist = Levenshtein.distance(pred_str, label_str)
+        edit_dist = Levenshtein.distance(pred_str, label_seq)
 
-        batch_edit_loss += edit_dist / (len(label_str) + delta)
+        batch_edit_loss += edit_dist / (len(label_seq) + delta)
     
     batch_edit_loss /= logits.size(0)
 

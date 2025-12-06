@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from ssbsc.core import dataset as ds
 from ssbsc.helpers import folders as fld
-from transformers import BartForConditionalGeneration, PreTrainedTokenizerFast, Trainer, TrainingArguments
+from transformers import BartForConditionalGeneration, GPT2Tokenizer, Trainer, TrainingArguments
 from ssbsc.core import NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE, LOG_STEPS, WARMUP_STEPS, MAX_SEQ_LEN
 
 
@@ -20,7 +20,7 @@ class SecTrainer(Trainer):
         outputs = model(**inputs)
         logits = outputs.get("logits")
         
-        loss = custom_loss(logits, labels, self.tokenizer, alpha=self.alpha, delta=self.delta)
+        loss = custom_loss(logits, labels, self.processing_class, alpha=self.alpha, delta=self.delta)
         
         return (loss, outputs) if return_outputs else loss
 
@@ -37,11 +37,10 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
         pred_seq  = pred_seq[:len(label_seq)]
 
         pred_str  = tokenizer.decode(pred_seq, skip_special_tokens=True)
-        label_str = tokenizer.decode(label_seq, skip_special_tokens=True)
 
-        edit_dist = Levenshtein.distance(pred_str, label_str)
+        edit_dist = Levenshtein.distance(pred_str, label_seq)
 
-        batch_edit_loss += edit_dist / (len(label_str) + delta)
+        batch_edit_loss += edit_dist / (len(label_seq) + delta)
     
     batch_edit_loss /= logits.size(0)
 
@@ -51,13 +50,18 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
 
 
 def init_model():
-    tokenizer = PreTrainedTokenizerFast.from_pretrained("alisawuffles/superbpe-tokenizer-128k")
+    tokenizer = GPT2Tokenizer.from_pretrained("alisawuffles/superbpe-tokenizer-128k")
+
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({"pad_token": "<pad>"})
+
+    assert tokenizer.pad_token_id is not None and tokenizer.pad_token_id >= 0
+
     model = BartForConditionalGeneration.from_pretrained("facebook/bart-base")
 
     model.resize_token_embeddings(len(tokenizer))
 
-    tokenizer.pad_token = tokenizer.eos_token
-    model.config.pad_token_id = tokenizer.eos_token_id
+    model.config.pad_token_id = tokenizer.pad_token_id
 
     model.gradient_checkpointing_enable()
     model.config.use_cache = False
@@ -83,13 +87,13 @@ def tune_model():
         output_dir=ssbsc_temp_dir,
 
         num_train_epochs=NUM_EPOCHS,
-        per_device_train_batch_size=1,
+        per_device_train_batch_size=2,
         learning_rate=LEARNING_RATE,
         logging_steps=LOG_STEPS,
         # to better leverage Adam
         warmup_steps=WARMUP_STEPS,  
 
-        gradient_accumulation_steps=8,
+        gradient_accumulation_steps=6,
         gradient_checkpointing=True,
 
         save_strategy="epoch",

@@ -16,7 +16,7 @@ from ssbsc.core import MAX_BYTES, SEGMENTS, SNR_DB_LIST
 class SecDataset(torch.utils.data.Dataset):
     def __init__(self, pairs, tokenizer, max_len):
         self.pairs = pairs
-        self.tokenizer = tokenizer
+        self.processing_class = tokenizer
         self.max_len = max_len
 
     def __len__(self):
@@ -24,8 +24,8 @@ class SecDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, idx):
         s1, s = self.pairs[idx]
-        enc = self.tokenizer(s1, truncation=True, padding='max_length', max_length=self.max_len, return_tensors="pt")
-        tgt = self.tokenizer(s, truncation=True, padding='max_length', max_length=self.max_len, return_tensors="pt")
+        enc = self.processing_class(s1, truncation=True, padding='max_length', max_length=self.max_len, return_tensors="pt")
+        tgt = self.processing_class(s, truncation=True, padding='max_length', max_length=self.max_len, return_tensors="pt")
         
         return {
             "input_ids": enc.input_ids.squeeze(0),
