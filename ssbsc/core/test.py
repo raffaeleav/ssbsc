@@ -10,20 +10,20 @@ from torch.utils.data import DataLoader
 from ssbsc.helpers import folders as fld
 from nltk.translate.bleu_score import corpus_bleu
 from ssbsc.swl import MAX_SEQ_LEN, BATCH_SIZE, SEGMENTS
-from transformers import BartTokenizer, BartForConditionalGeneration, PreTrainedTokenizerFast
+from transformers import BartForConditionalGeneration, GPT2Tokenizer
 
 
 def init_model():
-    temp_dir = fld.get_temp_dir()
+    ssbsc_temp_dir = fld.get_ssbsc_temp_dir()
 
-    tokenizer = BartTokenizer.from_pretrained(temp_dir)
-    model = BartForConditionalGeneration.from_pretrained(temp_dir)
+    tokenizer = GPT2Tokenizer.from_pretrained(ssbsc_temp_dir)
+    model = BartForConditionalGeneration.from_pretrained(ssbsc_temp_dir)
 
     return tokenizer, model
 
 
 def init_test_dataset(tokenizer):
-    test_pairs = ds.get_pairs()
+    _, test_pairs = ds.get_pairs()
     test_dataset  = ds.SecDataset(test_pairs, tokenizer, MAX_SEQ_LEN)
 
     return test_dataset

@@ -51,18 +51,16 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
 
 def init_model():
     tokenizer = GPT2Tokenizer.from_pretrained("alisawuffles/superbpe-tokenizer-128k")
-
-    if tokenizer.pad_token is None:
-        tokenizer.add_special_tokens({"pad_token": "<pad>"})
+ 
+    tokenizer.add_special_tokens({"pad_token": "<pad>"})
+    tokenizer.pad_token = "<pad>"
 
     assert tokenizer.pad_token_id is not None and tokenizer.pad_token_id >= 0
 
     model = BartForConditionalGeneration.from_pretrained("facebook/bart-base")
 
     model.resize_token_embeddings(len(tokenizer))
-
     model.config.pad_token_id = tokenizer.pad_token_id
-
     model.gradient_checkpointing_enable()
     model.config.use_cache = False
 
