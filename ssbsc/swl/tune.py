@@ -24,7 +24,7 @@ class SecTrainer(Trainer):
         
         return (loss, outputs) if return_outputs else loss
 
-# [to-do] check 
+ 
 def custom_loss(logits, labels, tokenizer, alpha, delta):
     loss_fct = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
     ce_loss = loss_fct(logits.view(-1, logits.size(-1)), labels.view(-1))
@@ -37,10 +37,11 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
         pred_seq  = pred_seq[:len(label_seq)]
 
         pred_str  = tokenizer.decode(pred_seq, skip_special_tokens=True)
+        label_str = tokenizer.decode(label_seq, skip_special_tokens=True)
 
-        edit_dist = Levenshtein.distance(pred_str, label_seq)
+        edit_dist = Levenshtein.distance(pred_str, label_str)
 
-        batch_edit_loss += edit_dist / (len(label_seq) + delta)
+        batch_edit_loss += edit_dist / (len(label_str) + delta)
     
     batch_edit_loss /= logits.size(0)
 

@@ -19,14 +19,15 @@ if __name__ == "__main__":
     ssbsc_model = fld.get_file_path(ssbsc_temp_dir, "model.safetensors")
     ssbsc_results = fld.get_file_path(results_dir, "ssbsc_*.json")
 
-    # if not os.path.isfile(swl_model): 
-        # tn.tune_model()
-    
-    # if not glob(swl_results): 
-        # ts.test_model()
+    datasets_dir = fld.get_datasets_dir()
+    ssbsc_test_pairs = fld.get_file_path(datasets_dir, "ssbsc_test_pairs.json")
 
-    # if not os.path.isfile(ssbsc_model): 
-        # stn.tune_model()
-    
-    if not glob(swl_results): 
-        sts.test_model()
+    # this is needed when building test dataset to not go OOM on VRAM
+    if not os.path.isfile(ssbsc_test_pairs):
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+    # tn.tune_model()
+    # ts.test_model()
+
+    # stn.tune_model()
+    sts.test_model()

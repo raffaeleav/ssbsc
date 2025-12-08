@@ -161,7 +161,6 @@ def enc_dec(sentences):
     return pairs
 
 
-
 def get_sentences(test_pairs):
     sentences = []
 

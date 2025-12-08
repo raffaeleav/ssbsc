@@ -35,37 +35,39 @@ def decode(model, tokenizer, test_dataset, batch_size=32):
     sentences = []
     pred_sentences = []
 
-    for batch in tqdm(loader, desc="Decoding batches"):
-        # noisy encoded sentences
-        input_ids = batch["input_ids"]         
-        attention_mask = batch["attention_mask"]
-        # original sentences
-        label_ids = batch["labels"]            
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
 
-        if torch.cuda.is_available():
-            input_ids = input_ids.cuda()
-            attention_mask = attention_mask.cuda()
-            label_ids = label_ids.cuda()
-            model = model.cuda()
+    model.eval()
 
-        with torch.no_grad():
-            pred_ids = model.generate(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                num_beams=4,
-                max_length=MAX_SEQ_LEN,
-                early_stopping=True
-            )
+    with torch.no_grad():
+        for batch in tqdm(loader, desc="Decoding batches"):
+            # noisy encoded sentences
+            input_ids = batch["input_ids"].to(device)
+            attention_mask = batch["attention_mask"].to(device)
+            # needed due to the model/tokenizer mismatch
+            labels = batch["labels"].clone()
+            labels[labels == -100] = tokenizer.pad_token_id
+            label_ids = labels.to(device)       
 
-        for l_ids, p_ids in zip(label_ids, pred_ids):
-            # original sentence
-            s = tokenizer.decode(l_ids, skip_special_tokens=True)
+            with torch.no_grad():
+                pred_ids = model.generate(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    num_beams=4,
+                    max_length=MAX_SEQ_LEN,
+                    early_stopping=True
+                )
 
-            # predicted sentence
-            s2 = tokenizer.decode(p_ids, skip_special_tokens=True)
+            for l_ids, p_ids in zip(label_ids, pred_ids):
+                # original sentence
+                s = tokenizer.decode(l_ids, skip_special_tokens=True)
 
-            sentences.append(s)
-            pred_sentences.append(s2)
+                # predicted sentence
+                s2 = tokenizer.decode(p_ids, skip_special_tokens=True)
+
+                sentences.append(s)
+                pred_sentences.append(s2)
 
     return sentences, pred_sentences
 

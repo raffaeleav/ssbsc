@@ -35,18 +35,15 @@ def decode(model, tokenizer, test_dataset, batch_size=32):
     sentences = []
     pred_sentences = []
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+
     for batch in tqdm(loader, desc="Decoding batches"):
         # noisy encoded sentences
-        input_ids = batch["input_ids"]         
-        attention_mask = batch["attention_mask"]
+        input_ids = batch["input_ids"].to(device)         
+        attention_mask = batch["attention_mask"].to(device)
         # original sentences
-        label_ids = batch["labels"]            
-
-        if torch.cuda.is_available():
-            input_ids = input_ids.cuda()
-            attention_mask = attention_mask.cuda()
-            label_ids = label_ids.cuda()
-            model = model.cuda()
+        label_ids = batch["labels"].to(device)            
 
         with torch.no_grad():
             pred_ids = model.generate(

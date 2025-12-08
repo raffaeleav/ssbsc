@@ -37,10 +37,11 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
         pred_seq  = pred_seq[:len(label_seq)]
 
         pred_str  = tokenizer.decode(pred_seq, skip_special_tokens=True)
+        label_str = tokenizer.decode(label_seq, skip_special_tokens=True)
 
-        edit_dist = Levenshtein.distance(pred_str, label_seq)
+        edit_dist = Levenshtein.distance(pred_str, label_str)
 
-        batch_edit_loss += edit_dist / (len(label_seq) + delta)
+        batch_edit_loss += edit_dist / (len(label_str) + delta)
     
     batch_edit_loss /= logits.size(0)
 
@@ -50,19 +51,8 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
 
 
 def init_model():
-    tokenizer = GPT2Tokenizer.from_pretrained("alisawuffles/superbpe-tokenizer-128k")
- 
-    tokenizer.add_special_tokens({"pad_token": "<pad>"})
-    tokenizer.pad_token = "<pad>"
-
-    assert tokenizer.pad_token_id is not None and tokenizer.pad_token_id >= 0
-
+    tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
     model = BartForConditionalGeneration.from_pretrained("facebook/bart-base")
-
-    model.resize_token_embeddings(len(tokenizer))
-    model.config.pad_token_id = tokenizer.pad_token_id
-    model.gradient_checkpointing_enable()
-    model.config.use_cache = False
 
     return tokenizer, model
 
@@ -80,12 +70,12 @@ def tune_model():
     tokenizer, model = init_model()
     train_dataset = init__train_dataset(tokenizer)
     
-    # due to my 8GB VRAM i have to use 1 element x training batch, so gradient_accumulation_steps=8 is leveraged
+    # due to my 8GB VRAM i have to use 2 element x training batch, so gradient_accumulation_steps=8 is leveraged
     training_args = TrainingArguments(
         output_dir=ssbsc_temp_dir,
 
         num_train_epochs=NUM_EPOCHS,
-        per_device_train_batch_size=2,
+        per_device_train_batch_size=BATCH_SIZE,
         learning_rate=LEARNING_RATE,
         logging_steps=LOG_STEPS,
         # to better leverage Adam
