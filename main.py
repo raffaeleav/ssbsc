@@ -3,7 +3,7 @@ import os
 from glob import glob
 from ssbsc.helpers import folders as fld
 from ssbsc.swl import test as ts, tune as tn
-from ssbsc.core import test as sts, tune as stn
+from ssbsc.bart import test as sts, tune as stn
 
 
 if __name__ == "__main__":

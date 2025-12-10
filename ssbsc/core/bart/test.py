@@ -118,7 +118,7 @@ def test_model():
     results_dir = fld.get_results_dir()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-    results_file = fld.get_file_path(results_dir, f"ssbsc_results_{timestamp}.json")
+    results_file = fld.get_file_path(results_dir, f"ssbsc_bart+superbpe_results_{timestamp}.json")
     tokenizer, model = init_model()
 
     test_dataset = init_test_dataset(tokenizer)
@@ -130,7 +130,7 @@ def test_model():
     r = rouge_l(sentences, pred_sentences)
 
     results = {
-        "approach": "ssbsc",
+        f"approach": "ssbsc_bart+superbpe",
         "bler": b,
         "bleu": l,
         "rouge_l": r
