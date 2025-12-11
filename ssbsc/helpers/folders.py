@@ -10,14 +10,12 @@ def setup():
     temp_dir = os.path.abspath(os.path.join(data_dir, "temp"))
     datasets_dir = os.path.abspath(os.path.join(data_dir, "datasets"))
     swl_temp_dir = os.path.abspath(os.path.join(temp_dir, "swl"))
-    ssbsc_temp_dir = os.path.abspath(os.path.join(temp_dir, "ssbsc"))
 
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(results_dir, exist_ok=True)
     os.makedirs(temp_dir, exist_ok=True)
     os.makedirs(datasets_dir, exist_ok=True)
     os.makedirs(swl_temp_dir, exist_ok=True)
-    os.makedirs(ssbsc_temp_dir, exist_ok=True)
 
 
 def get_data_dir():
@@ -47,13 +45,6 @@ def get_swl_temp_dir():
     swl_temp_dir = get_dir(temp_dir, "swl")
 
     return swl_temp_dir
-
-
-def get_ssbsc_temp_dir():
-    temp_dir = get_temp_dir()
-    ssbsc_temp_dir = get_dir(temp_dir, "ssbsc")
-
-    return ssbsc_temp_dir
 
 
 def get_datasets_dir():
