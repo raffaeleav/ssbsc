@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from ssbsc.core import dataset as ds
 from ssbsc.helpers import folders as fld
-from transformers import BartForConditionalGeneration, GPT2Tokenizer, Trainer, TrainingArguments
+from transformers import T5ForConditionalGeneration, T5Tokenizer, Trainer, TrainingArguments
 from ssbsc.core import NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE, LOG_STEPS, WARMUP_STEPS, MAX_SEQ_LEN
 
 
@@ -51,7 +51,63 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
 
 
 def init_model():
-    tokenizer = None
-    model = None
+    tokenizer = T5Tokenizer.from_pretrained("google/t5-v1_1-base")
+    model = T5ForConditionalGeneration.from_pretrained("google/t5-v1_1-base")
 
     return tokenizer, model
+
+
+def init__train_dataset(tokenizer):
+    train_pairs, _ = ds.get_pairs()
+    train_dataset = ds.SecDataset(train_pairs, tokenizer, MAX_SEQ_LEN)
+    
+    return train_dataset
+
+
+def tune_model():
+    temp_dir = fld.get_temp_dir()
+    ssbsc_t5_temp_dir = fld.get_dir(temp_dir, "ssbsc_t5")
+
+    tokenizer, model = init_model()
+    train_dataset = init__train_dataset(tokenizer)
+    
+    training_args = TrainingArguments(
+        output_dir=ssbsc_t5_temp_dir,
+
+        num_train_epochs=NUM_EPOCHS,
+        per_device_train_batch_size=BATCH_SIZE,
+        learning_rate=LEARNING_RATE,
+        logging_steps=LOG_STEPS,
+        # to better leverage Adam
+        warmup_steps=WARMUP_STEPS,  
+
+        gradient_accumulation_steps=4,
+        gradient_checkpointing=True,
+
+        save_strategy="epoch",
+
+        fp16=torch.cuda.is_available()
+    )
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    alpha = 0.6
+    delta = 0.1
+
+    trainer = SecTrainer(
+        model=model,
+        args=training_args,
+
+        train_dataset=train_dataset,
+        processing_class=tokenizer,
+
+        alpha=alpha,
+        delta=delta
+    )
+
+    trainer.train()
+    model.save_pretrained(ssbsc_t5_temp_dir)
+    tokenizer.save_pretrained(ssbsc_t5_temp_dir)
+
+    print("[Success] Fine-tuning completed")
