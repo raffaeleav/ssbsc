@@ -31,23 +31,28 @@ def custom_loss(logits, labels, tokenizer, alpha, delta):
     
     pred_ids = torch.argmax(logits, dim=-1)
     batch_edit_loss = 0.0
+    vocab_size = tokenizer.vocab_size  # use tokenizer vocab size
 
     for pred_seq, label_seq in zip(pred_ids, labels):
         label_seq = label_seq[label_seq != tokenizer.pad_token_id]
         pred_seq  = pred_seq[:len(label_seq)]
 
-        pred_str  = tokenizer.decode(pred_seq, skip_special_tokens=True)
-        label_str = tokenizer.decode(label_seq, skip_special_tokens=True)
+        # Clamp to tokenizer vocab size
+        pred_seq = pred_seq.clamp(0, vocab_size - 1)
+
+        # Convert to CPU list for decoding
+        pred_str  = tokenizer.decode(pred_seq.cpu().tolist(), skip_special_tokens=True)
+        label_str = tokenizer.decode(label_seq.cpu().tolist(), skip_special_tokens=True)
 
         edit_dist = Levenshtein.distance(pred_str, label_str)
-
         batch_edit_loss += edit_dist / (len(label_str) + delta)
     
-    batch_edit_loss /= logits.size(0)
-
+    # Detach non-differentiable term
+    batch_edit_loss = torch.tensor(batch_edit_loss, device=logits.device, dtype=logits.dtype).detach()
+    
     total_loss = ce_loss + alpha * batch_edit_loss
-
     return total_loss
+
 
 
 def init_model():
@@ -81,12 +86,13 @@ def tune_model():
         # to better leverage Adam
         warmup_steps=WARMUP_STEPS,  
 
+        max_grad_norm=1.0,
         gradient_accumulation_steps=4,
         gradient_checkpointing=True,
 
         save_strategy="epoch",
 
-        fp16=torch.cuda.is_available()
+        fp16=False
     )
 
     if torch.cuda.is_available():
@@ -111,3 +117,4 @@ def tune_model():
     tokenizer.save_pretrained(ssbsc_t5_temp_dir)
 
     print("[Success] Fine-tuning completed")
+    

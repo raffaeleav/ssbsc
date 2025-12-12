@@ -10,13 +10,10 @@ if __name__ == "__main__":
     fld.setup()
 
     swl_temp_dir = fld.get_swl_temp_dir()
-    ssbsc_temp_dir = fld.get_ssbsc_temp_dir()
     results_dir = fld.get_results_dir()
 
     swl_model = fld.get_file_path(swl_temp_dir, "model.safetensors")
     swl_results = fld.get_file_path(results_dir, "swl_*.json")
-
-    ssbsc_model = fld.get_file_path(ssbsc_temp_dir, "model.safetensors")
     ssbsc_results = fld.get_file_path(results_dir, "ssbsc_*.json")
 
     datasets_dir = fld.get_datasets_dir()
