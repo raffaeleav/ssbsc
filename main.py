@@ -1,9 +1,8 @@
 import os
 
-from glob import glob
 from ssbsc.helpers import folders as fld
 from ssbsc.swl import test as ts, tune as tn
-from ssbsc.core.st5 import tune as stn
+from ssbsc.core.st5 import test as sts, tune as stn
 
 
 if __name__ == "__main__":
@@ -26,5 +25,5 @@ if __name__ == "__main__":
     # tn.tune_model()
     # ts.test_model()
 
-    stn.tune_model()
-    # sts.test_model()
+    # stn.tune_model()
+    sts.test_model()

@@ -4,20 +4,21 @@ import numpy as np
 
 from tqdm import tqdm
 from datetime import datetime
-from ssbsc.swl import dataset as ds
+from ssbsc.core import dataset as ds
 from rouge_score import rouge_scorer
 from torch.utils.data import DataLoader
 from ssbsc.helpers import folders as fld
 from nltk.translate.bleu_score import corpus_bleu
 from ssbsc.swl import MAX_SEQ_LEN, BATCH_SIZE, SEGMENTS
-from transformers import BartTokenizer, BartForConditionalGeneration
+from transformers import T5ForConditionalGeneration, T5Tokenizer
 
 
 def init_model():
-    swl_temp_dir = fld.get_swl_temp_dir()
+    temp_dir = fld.get_temp_dir()
+    ssbsc_t5_temp_dir = fld.get_dir(temp_dir, "ssbsc_t5")
 
-    tokenizer = BartTokenizer.from_pretrained(swl_temp_dir)
-    model = BartForConditionalGeneration.from_pretrained(swl_temp_dir)
+    tokenizer = T5Tokenizer.from_pretrained(ssbsc_t5_temp_dir)
+    model = T5ForConditionalGeneration.from_pretrained(ssbsc_t5_temp_dir)
 
     return tokenizer, model
 
@@ -113,19 +114,20 @@ def rouge_l(sentences, pred_sentences):
 def test_model():
     results_dir = fld.get_results_dir()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    results_file = fld.get_file_path(results_dir, f"swl_results_{timestamp}.json")
 
+    results_file = fld.get_file_path(results_dir, f"ssbsc_st5_{timestamp}.json")
     tokenizer, model = init_model()
+
     test_dataset = init_test_dataset(tokenizer)
     
     sentences, pred_sentences = decode(model, tokenizer, test_dataset, BATCH_SIZE)
-    
+
     b = bler(sentences, pred_sentences, SEGMENTS)
     l = bleu(sentences, pred_sentences)
     r = rouge_l(sentences, pred_sentences)
 
     results = {
-        "approach": "swl",
+        f"approach": "ssbsc_st5",
         "bler": b,
         "bleu": l,
         "rouge_l": r
