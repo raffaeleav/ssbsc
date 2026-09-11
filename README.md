@@ -13,7 +13,8 @@
 
 
 ## Overview 
-  This project builds on an existing architecture for semantic coding described by XXX et al., implementing that architecture and extending it with the addition of
+  This project builds on an existing architecture for semantic coding described by Hao et al. (https://arxiv.org/abs/2505.08536), implementing that architecture and extending it 
+  with the addition of
   BCH codes with shorter parameters. Short BCH codes are used to encode and decode segments of phrases in parallel, cutting down on latency by processing multiple segments 
   simultaneously rather than sequentially. Any residual errors left uncorrected by the BCH codes are then resolved by an AI model, which leverages the semantic context of the 
   content to identify and fix these errors as a semantic task, rather than relying on additional redundancy.
