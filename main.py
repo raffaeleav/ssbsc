@@ -22,8 +22,8 @@ if __name__ == "__main__":
     if not os.path.isfile(ssbsc_test_pairs):
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-    # tn.tune_model()
-    # ts.test_model()
+    tn.tune_model()
+    ts.test_model()
 
-    # stn.tune_model()
+    stn.tune_model()
     sts.test_model()
